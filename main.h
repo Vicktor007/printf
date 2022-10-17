@@ -1,91 +1,120 @@
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef _PRINTF_H_
+#define _PRINTF_H_
+
 #include <stdarg.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <limits.h>
+#include <stdlib.h>
+
+#define OUTPUT_BUF_SIZE 1024
+#define BUF_FLUSH -1
+
+#define FIELD_BUF_SIZE 50
+
+#define NULL_STRING "(null)"
+
+#define PARAMS_INIT {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+
+#define CONVERT_LOWERCASE	1
+#define CONVERT_UNSIGNED	2
 
 /**
- * struct specifier - contains specifiers for printf
+ * struct parameters - parameters struct
  *
- * @width: width of field to print
- * @precision: precision of field to print
- * @length: modifies type length. h/l flags. 0 default, +1 per l, -1 per h
- * @widthflag: tells whether width is set
- * @precisionflag: tells whether precision is set
- * @left: left justify, '-'. 0 for right, 1 for left
- * @sign: force sign, '+'. 0 for no, 1 for yes
- * @space: space pad left side of positive numbers if leading 0s. 0 no 1 yes
- * @zero: zero pad numbers up to width. 0 for no, 1 for yes.
- * @zerox: add leading 0, 0x, or 0X to o, x or X specifiers. 0 no 1 yes
- * @specifier: the data type to print, c, s, d, x, etc.
+ * @unsign: flag if unsigned value
+ *
+ * @plus_flag: on if plus_flag specified
+ * @space_flag: on if hashtag_flag specified
+ * @hashtag_flag: on if _flag specified
+ * @zero_flag: on if _flag specified
+ * @minus_flag: on if _flag specified
+ *
+ * @width: field width specified
+ * @precision: field precision specified
+ *
+ * @h_modifier: on if h_modifier is specified
+ * @l_modifier: on if l_modifier is specified
+ *
+ */
+
+typedef struct parameters
+{
+	unsigned int unsign			: 1;
+
+	unsigned int plus_flag		: 1;
+	unsigned int space_flag		: 1;
+	unsigned int hashtag_flag	: 1;
+	unsigned int zero_flag		: 1;
+	unsigned int minus_flag		: 1;
+
+	unsigned int width;
+	unsigned int precision;
+
+	unsigned int h_modifier		: 1;
+	unsigned int l_modifier		: 1;
+} params_t;
+
+/**
+ * struct specifier - Struct token
+ *
+ * @specifier: format token
+ * @f: The function associated
  */
 typedef struct specifier
 {
-	unsigned int width;
-	unsigned int precision;
-	int length;
-	char widthflag;
-	char precisionflag;
-	char left;
-	char sign;
-	char space;
-	char zero;
-	char zerox;
-	char specifier;
-} specifier;
+	char *specifier;
+	int (*f)(va_list, params_t *);
+} specifier_t;
 
-/* from printf.c */
-int _printf(char *format, ...);
+/* _put.c module */
+int _puts(char *str);
+int _putchar(int c);
 
-/* from prep_types.c */
-char *prep_string(char *str, specifier spec);
-char *prep_numeric(char *str, specifier spec);
+/* print_functions.c module */
+int print_char(va_list ap, params_t *params);
+int print_int(va_list ap, params_t *params);
+int print_string(va_list ap, params_t *params);
+int print_percent(va_list ap, params_t *params);
+int print_S(va_list ap, params_t *params);
 
-/* from utility.c */
-int _strlen(char *str);
-int ifputs(char *s);
+/* number.c module */
+char *convert(long int num, int base, int flags, params_t *params);
+int print_unsigned(va_list ap, params_t *params);
+int print_address(va_list ap, params_t *params);
 
-/* from itos.c */
-char *itos(va_list list);
-char *hitos(va_list list);
-char *litos(va_list list);
-char *hhitos(va_list list);
+/* specifier.c module */
+int (*get_specifier(char *s))(va_list ap, params_t *params);
+int get_print_func(char *s, va_list ap, params_t *params);
+int get_flag(char *s, params_t *params);
+int get_modifier(char *s, params_t *params);
+char *get_width(char *s, params_t *params, va_list ap);
 
-/* from uitob.c */
-char *uitob(va_list list);
-char *luitob(va_list list);
-char *huitob(va_list list);
-char *hhuitob(va_list list);
+/* convert_number.c module */
+int print_hex(va_list ap, params_t *params);
+int print_HEX(va_list ap, params_t *params);
+int print_binary(va_list ap, params_t *params);
+int print_octal(va_list ap, params_t *params);
 
-/* from utos.c */
-char *utos(va_list list);
-char *hutos(va_list list);
-char *hhutos(va_list list);
-char *lutos(va_list list);
+/* simple_printers.c module */
+int print_from_to(char *start, char *stop, char *except);
+int print_rev(va_list ap, params_t *params);
+int print_rot13(va_list ap, params_t *params);
 
-/* from itoo.c */
-char *itoo(va_list list);
-char *litoo(va_list list);
-char *hitoo(va_list list);
-char *hhitoo(va_list list);
+/* print_number.c module */
+int _isdigit(int c);
+int _strlen(char *s);
+int print_number(char *str, params_t *params);
+int print_number_right_shift(char *str, params_t *params);
+int print_number_left_shift(char *str, params_t *params);
 
-/* from itox.c */
-char *itox(va_list list);
-char *litox(va_list list);
-char *hitox(va_list list);
-char *hhitox(va_list list);
+/* params.c module */
+void init_params(params_t *params, va_list ap);
 
-/* from itox.c */
-char *itoX(va_list list);
-char *hitoX(va_list list);
-char *hhitoX(va_list list);
-char *litoX(va_list list);
+/* string_fields.c modoule */
+char *get_precision(char *p, params_t *params, va_list ap);
 
-/* from stos.c */
-char *rev(char *str);
-char *rot(char *str);
-char *print_hidden(char *str);
-char *null(void);
+/* _prinf.c module */
+int _printf(const char *format, ...);
 
-/* from ptos.c */
-char *nil(void);
-
-#endif
+#endif /*_MAIN_H_*/
